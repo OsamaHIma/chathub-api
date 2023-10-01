@@ -8,13 +8,13 @@ const register = async (req, res, next) => {
 
     const userExists = await User.findOne({ username });
     if (userExists) {
-      res.status(409).json({ message: "Username already used", status: false });
+      res.json({ message: "Username already used", status: false });
       return;
     }
 
     const emailExists = await User.findOne({ email });
     if (emailExists) {
-      res.status(409).json({ message: "Email already used", status: false });
+      res.json({ message: "Email already used", status: false });
       return;
     }
 
