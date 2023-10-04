@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const userRoutes = require("./routes/users");
+const Message = require("./models/message");
 const messagesRoutes = require("./routes/messages");
 const app = express();
 const socket = require("socket.io");
@@ -45,6 +46,18 @@ io.on("connection", (socket) => {
     if (sendUserSocket) {
       socket.to(sendUserSocket).emit("msg-receive", data.msg);
     }
+  });
+  
+  socket.on("msg-seen", (msgId) => {
+    // Find the message with the given ID and update the "seen" field to true
+    Message.findByIdAndUpdate(msgId, { seen: true }, (err, updatedMessage) => {
+      if (err) {
+        console.error("Error updating message:", err);
+      } else {
+        // Emit a "msg-seen" event to the sender's socket
+        socket.emit("msg-seen", updatedMessage._id);
+      }
+    });
   });
 });
 module.exports = app;

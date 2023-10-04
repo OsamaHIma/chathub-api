@@ -2,11 +2,12 @@ const Message = require("../models/message");
 
 module.exports.addMsg = async (req, res, next) => {
   try {
-    const { from, to, message } = req.body;
+    const { from, to, message, date } = req.body;
     const newMessage = await Message.create({
       content: message,
       users: [from, to],
       sender: from,
+      date,
     });
     if (newMessage)
       return res.status(200).json({ msg: "Message added", status: true });
@@ -28,6 +29,9 @@ module.exports.getAllMsgBetweenTowUsers = async (req, res, next) => {
       return {
         fromSelf: msg.sender.toString() === from,
         message: msg.content,
+        date: msg.date,
+        seen: msg.seen,
+        _id: msg._id,
       };
     });
     res.json(projectedMessages);
@@ -39,9 +43,9 @@ module.exports.getAllMsgBetweenTowUsers = async (req, res, next) => {
 
 module.exports.getAllMsgs = async (req, res, next) => {
   try {
-    const allMsgs = await Message.find({ sender: { $ne: req.params.id } }).select(
-      ["sender", "date", "content", "updatedAt", "_id"]
-    );
+    const allMsgs = await Message.find({
+      sender: { $ne: req.params.id },
+    }).select(["sender", "date", "content", "updatedAt", "_id"]);
 
     res.status(200).json(allMsgs);
   } catch (error) {
