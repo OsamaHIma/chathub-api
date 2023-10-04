@@ -10,7 +10,9 @@ module.exports.addMsg = async (req, res, next) => {
       date,
     });
     if (newMessage)
-      return res.status(200).json({ msg: "Message added", status: true });
+      return res
+        .status(200)
+        .json({ msg: "Message added", id: newMessage._id, status: true });
   } catch (error) {
     next(error);
     console.error("Error adding the msg", error);

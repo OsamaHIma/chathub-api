@@ -44,20 +44,19 @@ io.on("connection", (socket) => {
   socket.on("send-msg", (data) => {
     const sendUserSocket = onlineUsers.get(data.to);
     if (sendUserSocket) {
-      socket.to(sendUserSocket).emit("msg-receive", data.msg);
+      socket.to(sendUserSocket).emit("msg-receive", data);
     }
   });
   
-  socket.on("msg-seen", (msgId) => {
-    // Find the message with the given ID and update the "seen" field to true
-    Message.findByIdAndUpdate(msgId, { seen: true }, (err, updatedMessage) => {
-      if (err) {
-        console.error("Error updating message:", err);
-      } else {
-        // Emit a "msg-seen" event to the sender's socket
-        socket.emit("msg-seen", updatedMessage._id);
-      }
-    });
-  });
+  socket.on("msg-seen", async (msgId) => {
+  try {
+    const updatedMessage = await Message.findByIdAndUpdate(msgId, { seen: true });
+    // Emit a "msg-seen" event to the sender's socket
+    socket.emit("msg-seen", updatedMessage._id);
+  } catch (err) {
+    console.error("Error updating message:", err);
+  }
+});
+
 });
 module.exports = app;
