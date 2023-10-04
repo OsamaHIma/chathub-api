@@ -25,27 +25,26 @@ mongoose
   });
 
 const server = app.listen(process.env.PORT, () => {
-  console.log(`Server Running on: ${process.env.PORT} `);
+  console.log(`Server Running on: ${process.env.PORT}`);
 });
 
 const io = socket(server, {
   cors: {
-    origin: ["http://localhost:3000", "https://chat-hub-dusky.vercel.app"],
-    credentials: true,
+    origin: "*",
   },
 });
+
 global.onlineUsers = new Map();
 io.on("connection", (socket) => {
   global.chatSocket = socket;
   socket.on("add-user", (userId) => {
     onlineUsers.set(userId, socket.id);
   });
-
   socket.on("send-msg", (data) => {
     const sendUserSocket = onlineUsers.get(data.to);
-    console.log(data);
     if (sendUserSocket) {
       socket.to(sendUserSocket).emit("msg-receive", data.msg);
     }
   });
 });
+module.exports = app;
