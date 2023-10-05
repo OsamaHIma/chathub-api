@@ -30,14 +30,6 @@ const ModalSchema = new mongoose.Schema({
     maxLength: 120,
   },
   avatar: String,
-  isAvatarImageSet: {
-    type: Boolean,
-    default: false,
-  },
-  avatarImage: {
-    type: String,
-    default: "",
-  },
 });
 
 ModalSchema.pre("save", function (next) {

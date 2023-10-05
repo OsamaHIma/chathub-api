@@ -38,18 +38,24 @@ const login = async (req, res, next) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      res.status(401).json({ message: "Incorrect Email or password", status: false });
+      res
+        .status(401)
+        .json({ message: "Incorrect Email or password", status: false });
       return;
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      res.status(401).json({ message: "Incorrect Email or password", status: false });
+      res
+        .status(401)
+        .json({ message: "Incorrect Email or password", status: false });
       return;
     }
 
     delete user.password;
-    res.status(200).json({ status: true, token: sign({ sub: user._id }), user });
+    res
+      .status(200)
+      .json({ status: true, token: sign({ sub: user._id }), user });
   } catch (error) {
     console.log(`Error logging the user: ${error}`);
     next(error);
@@ -72,25 +78,45 @@ const getAllUsers = async (req, res, next) => {
   }
 };
 
-const check = async (req, res, next) => {
+const editUser = async (req, res, next) => {
   try {
-    const { username, email } = req.body;
+    const { username, email, name, password } = req.body;
 
-    if (username) {
-      const userExists = await User.findOne({ username });
-      if (userExists)
-        res.json({ message: "Username already used", status: false });
-    }
+    // Find the current user by their username
+    const currentUser = await User.findOne({ username });
+    console.log(currentUser);
+    // Update the user's properties with the data from the request
+    currentUser.email = email;
+    currentUser.name = name;
+    currentUser.password = password;
+    currentUser.isAvatarImageSet = true;
 
-    if (email) {
-      const emailExists = await User.findOne({ email });
-      if (emailExists)
-        return res.json({ message: "Email already used", status: false });
-    }
+    // // Handle the avatar upload using the multer middleware
+    // (req, res, async (err) => {
+    //   if (err) {
+    //     // Handle any upload errors
+    //     console.log("Error uploading avatar:", err);
+    //     return res.status(400).json({ message: "Error uploading avatar" });
+    //   }
+
+    //   // Access the uploaded file from req.file if available
+    //   if (req.file) {
+    //     currentUser.avatar = req.file.path; // Save the file path to the user's avatar field
+    //   }
+
+    // Save the updated user
+    await currentUser.save();
+
+    res.status(200).json({
+      message: "User updated successfully",
+      status: true,
+      user: currentUser.getData(),
+    });
+    // });
   } catch (error) {
     next(error);
-    console.log(`Error creating the user: ${error}`);
+    console.log(`Error updating the user: ${error}`);
   }
 };
 
-module.exports = { register, check, login,getAllUsers };
+module.exports = { register, editUser, login, getAllUsers };
