@@ -69,6 +69,7 @@ const getAllUsers = async (req, res, next) => {
       "name",
       "username",
       "avatar",
+      "about",
       "_id",
     ]);
 
@@ -80,41 +81,39 @@ const getAllUsers = async (req, res, next) => {
 
 const editUser = async (req, res, next) => {
   try {
-    const { username, email, name, password } = req.body;
+    const { username, email, name, about, avatar } = req.body;
 
     // Find the current user by their username
     const currentUser = await User.findOne({ username });
-    console.log(currentUser);
+
     // Update the user's properties with the data from the request
-    currentUser.email = email;
-    currentUser.name = name;
-    currentUser.password = password;
-    currentUser.isAvatarImageSet = true;
+    if (email) {
+      currentUser.email = email;
+    }
+    if (name) {
+      currentUser.name = name;
+    }
+    if (about) {
+      currentUser.about = about;
+    }
+    if (req.file) {
+      // If an avatar file was uploaded
+      currentUser.avatar = req.file.filename; // Assign the filename to the avatar field
+    }
 
-    // // Handle the avatar upload using the multer middleware
-    // (req, res, async (err) => {
-    //   if (err) {
-    //     // Handle any upload errors
-    //     console.log("Error uploading avatar:", err);
-    //     return res.status(400).json({ message: "Error uploading avatar" });
-    //   }
-
-    //   // Access the uploaded file from req.file if available
-    //   if (req.file) {
-    //     currentUser.avatar = req.file.path; // Save the file path to the user's avatar field
-    //   }
-
-    // Save the updated user
     await currentUser.save();
 
     res.status(200).json({
-      message: "User updated successfully",
+      message: "Information updated successfully",
       status: true,
-      user: currentUser.getData(),
+      user: currentUser,
     });
-    // });
   } catch (error) {
     next(error);
+    res.status(500).json({
+      message: "Error updating the info :(",
+      status: false,
+    });
     console.log(`Error updating the user: ${error}`);
   }
 };

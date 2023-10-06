@@ -1,16 +1,18 @@
 var express = require("express");
 const multer = require("multer");
+const path = require("path");
 
 // Set up multer storage configuration
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     // Set the destination folder for avatar uploads
-    cb(null, "../uploads");
+    cb(null, path.join(__dirname, "../uploads"));
   },
   filename: function (req, file, cb) {
-    // Generate a unique filename for the uploaded file
+    // Preserve the original file extension
+    const fileExtension = path.extname(file.originalname);
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, "avatar-" + uniqueSuffix);
+    cb(null, "avatar-" + uniqueSuffix + fileExtension);
   },
 });
 
@@ -29,5 +31,7 @@ router.post("/register", register);
 router.post("/login", login);
 router.get("/users/:id", getAllUsers);
 router.post("/edit_user", upload.single("avatar"), editUser);
+
+router.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 module.exports = router;
