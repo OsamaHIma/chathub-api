@@ -51,7 +51,7 @@ module.exports.getAllMsgs = async (req, res, next) => {
   try {
     const allMsgs = await Message.find({
       sender: { $ne: req.params.id },
-    }).select(["sender", "date", "content", "users", "updatedAt", "_id"]);
+    });
 
     res.status(200).json(allMsgs);
   } catch (error) {
