@@ -20,6 +20,10 @@ const ModalSchema = new mongoose.Schema(
       type: Date,
       // default: Date.now,
     },
+    replyTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Message",
+    },
   },
   {
     timestamps: true,

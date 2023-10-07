@@ -47,16 +47,16 @@ io.on("connection", (socket) => {
       socket.to(sendUserSocket).emit("msg-receive", data);
     }
   });
-  
-  socket.on("msg-seen", async (msgId) => {
-  try {
-    const updatedMessage = await Message.findByIdAndUpdate(msgId, { seen: true });
-    // Emit a "msg-seen" event to the sender's socket
-    socket.emit("msg-seen", updatedMessage._id);
-  } catch (err) {
-    console.error("Error updating message:", err);
-  }
-});
 
+  socket.on("msg-seen", async (msgId) => {
+    try {
+      const currentMessage = await Message.findOne({ _id: msgId });
+      currentMessage.seen = true;
+      await currentMessage.save();
+      socket.emit("msg-seen", currentMessage._id);
+    } catch (err) {
+      console.error("Error updating message:", err);
+    }
+  });
 });
 module.exports = app;
