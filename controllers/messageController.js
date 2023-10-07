@@ -21,7 +21,7 @@ module.exports.addMsg = async (req, res, next) => {
     next(error);
     console.error("Error adding the msg", error);
   }
-};;
+};
 
 module.exports.getAllMsgBetweenTowUsers = async (req, res, next) => {
   try {
@@ -51,7 +51,7 @@ module.exports.getAllMsgs = async (req, res, next) => {
   try {
     const allMsgs = await Message.find({
       sender: { $ne: req.params.id },
-    }).select(["sender", "date", "content", "updatedAt", "_id"]);
+    }).select(["sender", "date", "content", "users", "updatedAt", "_id"]);
 
     res.status(200).json(allMsgs);
   } catch (error) {
