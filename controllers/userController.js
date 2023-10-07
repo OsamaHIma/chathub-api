@@ -2,6 +2,14 @@ const User = require("../models/user");
 const bcrypt = require("bcrypt");
 const { sign } = require("../utils/jwtHelper");
 
+const cloudinary = require("cloudinary").v2;
+
+cloudinary.config({
+  cloud_name: "da9pm6mhw",
+  api_key: "239664568437982",
+  api_secret: "g-PLRJEpkZ6zy1k_ifyGF-rt8Zk",
+});
+
 const register = async (req, res, next) => {
   try {
     const { name, username, email, password } = req.body;
@@ -81,7 +89,7 @@ const getAllUsers = async (req, res, next) => {
 
 const editUser = async (req, res, next) => {
   try {
-    const { username, email, name, about, avatar } = req.body;
+    const { username, email, name, about } = req.body;
 
     // Find the current user by their username
     const currentUser = await User.findOne({ username });
@@ -98,7 +106,8 @@ const editUser = async (req, res, next) => {
     }
     if (req.file) {
       // If an avatar file was uploaded
-      currentUser.avatar = req.file.filename; // Assign the filename to the avatar field
+      const result = await cloudinary.uploader.upload(req.file.path); // Upload the image to Cloudinary
+      currentUser.avatar = result.secure_url; // Assign the secure URL to the avatar field
     }
 
     await currentUser.save();
