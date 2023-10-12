@@ -36,6 +36,8 @@ const io = socket(server, {
 });
 
 global.onlineUsers = new Map();
+global.typingUsers = new Set();
+
 io.on("connection", (socket) => {
   global.chatSocket = socket;
   socket.on("add-user", (userId) => {
@@ -58,5 +60,34 @@ io.on("connection", (socket) => {
       console.error("Error updating message:", err);
     }
   });
+
+  socket.on("typing", (userId) => {
+    typingUsers.add(userId);
+    socket.broadcast.emit("user-typing", userId);
+  });
+
+  socket.on("stop-typing", (userId) => {
+    typingUsers.delete(userId);
+    socket.broadcast.emit("user-stop-typing", userId);
+  });
+
+  socket.on("disconnect", () => {
+    const userId = Array.from(onlineUsers.entries()).find(
+      ([key, value]) => value === socket.id
+    )?.[0];
+    if (userId) {
+      onlineUsers.delete(userId);
+      typingUsers.delete(userId);
+      socket.broadcast.emit("user-disconnected", userId);
+    }
+  });
+  socket.on("update-user-status", (userId) => {
+    const isOnline = onlineUsers.has(userId);
+    
+    socket.emit("user-status",  isOnline );
+  });
 });
+
+
+
 module.exports = app;
