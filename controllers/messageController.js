@@ -25,12 +25,16 @@ module.exports.addMsg = async (req, res, next) => {
 
 module.exports.getAllMsgBetweenTowUsers = async (req, res, next) => {
   try {
-    const { from, to } = req.body;
+    const { from, to, page } = req.body;
+    const PAGE_SIZE = 30;
     const messages = await Message.find({
       users: {
         $all: [from, to],
       },
-    }).sort({ updatedAt: 1 });
+    }).sort({ updatedAt: -1 })
+      .skip((page - 1) * PAGE_SIZE)
+      .limit(PAGE_SIZE);
+
     const projectedMessages = messages.map((msg) => {
       return {
         fromSelf: msg.sender.toString() === from,

@@ -50,7 +50,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("msg-seen", async (msgId) => {
+  socket.on("update-msg-seen", async (msgId) => {
     try {
       const currentMessage = await Message.findOne({ _id: msgId });
       currentMessage.seen = true;
