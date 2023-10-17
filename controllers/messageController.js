@@ -9,7 +9,7 @@ module.exports.addMsg = async (req, res, next) => {
       users: [from, to],
       sender: from,
       date,
-      replyTo, // Add the replyTo field
+      replyTo,
     });
 
     if (newMessage) {
@@ -31,19 +31,25 @@ module.exports.getAllMsgBetweenTowUsers = async (req, res, next) => {
       users: {
         $all: [from, to],
       },
-    }).sort({ updatedAt: -1 })
+    })
+      .sort({ updatedAt: -1 })
       .skip((page - 1) * PAGE_SIZE)
       .limit(PAGE_SIZE);
 
-    const projectedMessages = messages.map((msg) => {
-      return {
-        fromSelf: msg.sender.toString() === from,
-        message: msg.content,
-        date: msg.updatedAt,
-        seen: msg.seen,
-        _id: msg._id,
-      };
-    });
+    const projectedMessages = await Promise.all(
+      messages.map(async (msg) => {
+        return {
+          fromSelf: msg.sender.toString() === from,
+          message: msg.content,
+          date: msg.updatedAt,
+          seen: msg.seen,
+          replyToMessage: msg.replyTo
+            ? await Message.findOne({ _id: msg.replyTo })
+            : false,
+          _id: msg._id,
+        };
+      })
+    );
     res.json(projectedMessages);
   } catch (error) {
     next(error);
