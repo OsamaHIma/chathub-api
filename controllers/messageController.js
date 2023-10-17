@@ -2,13 +2,14 @@ const Message = require("../models/message");
 
 module.exports.addMsg = async (req, res, next) => {
   try {
-    const { from, to, message, date, replyTo } = req.body;
+    const { from, to, message, date, replyTo, fileURL } = req.body;
 
     const newMessage = await Message.create({
       content: message,
       users: [from, to],
       sender: from,
       date,
+      fileURL,
       replyTo,
     });
 
@@ -43,6 +44,8 @@ module.exports.getAllMsgBetweenTowUsers = async (req, res, next) => {
           message: msg.content,
           date: msg.updatedAt,
           seen: msg.seen,
+          fileURL: msg.fileURL,
+          replyTo: msg.replyTo,
           replyToMessage: msg.replyTo
             ? await Message.findOne({ _id: msg.replyTo })
             : false,

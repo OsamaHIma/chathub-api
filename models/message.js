@@ -12,6 +12,9 @@ const ModalSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    fileURL: {
+      type: String,
+    },
     seen: {
       type: Boolean,
       default: false,
@@ -21,8 +24,7 @@ const ModalSchema = new mongoose.Schema(
       // default: Date.now,
     },
     replyTo: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Message",
+      type: String,
     },
   },
   {
