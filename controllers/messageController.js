@@ -23,6 +23,20 @@ module.exports.addMsg = async (req, res, next) => {
     console.error("Error adding the msg", error);
   }
 };
+module.exports.deleteMsg = async (req, res, next) => {
+  try {
+    const { id } = req.body;
+
+    const deletedMessage = await Message.deleteOne({ _id: id });
+    
+    if (deletedMessage) {
+      return res.status(200).json({ msg: "Message deleted", status: true });
+    }
+  } catch (error) {
+    next(error);
+    console.error("Error deleting the msg", error);
+  }
+};
 
 module.exports.getAllMsgBetweenTowUsers = async (req, res, next) => {
   try {
