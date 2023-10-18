@@ -26,6 +26,9 @@ const ModalSchema = new mongoose.Schema(
     replyTo: {
       type: String,
     },
+    fileName: {
+      type: String,
+    },
   },
   {
     timestamps: true,
