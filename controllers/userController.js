@@ -35,7 +35,7 @@ const register = async (req, res, next) => {
 
     res.status(200).json(user.signJwt());
   } catch (error) {
-    console.log(`Error creating the user: ${error}`);
+    console.error(`Error creating the user: ${error}`);
     next(error);
   }
 };
@@ -65,7 +65,7 @@ const login = async (req, res, next) => {
       .status(200)
       .json({ status: true, token: sign({ sub: user._id }), user });
   } catch (error) {
-    console.log(`Error logging the user: ${error}`);
+    console.error(`Error logging the user: ${error}`);
     next(error);
   }
 };
@@ -123,7 +123,7 @@ const editUser = async (req, res, next) => {
       message: "Error updating the info :(",
       status: false,
     });
-    console.log(`Error updating the user: ${error}`);
+    console.error(`Error updating the user: ${error}`);
   }
 };
 
