@@ -30,6 +30,10 @@ const ModalSchema = new mongoose.Schema({
     maxLength: 120,
   },
   avatar: String,
+  isAdmin: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 ModalSchema.pre("save", function (next) {

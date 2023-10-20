@@ -4,10 +4,10 @@ const path = require("path");
 
 // Set up multer storage configuration
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
+  // destination: function (req, file, cb) {
     // Set the destination folder for avatar uploads
-    cb(null, path.join(__dirname, "../uploads"));
-  },
+    // cb(null, path.join(__dirname, "../uploads"));
+  // },
   filename: function (req, file, cb) {
     // Preserve the original file extension
     const fileExtension = path.extname(file.originalname);

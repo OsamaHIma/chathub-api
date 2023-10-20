@@ -78,6 +78,7 @@ const getAllUsers = async (req, res, next) => {
       "username",
       "avatar",
       "about",
+      "isAdmin",
       "_id",
     ]);
 
