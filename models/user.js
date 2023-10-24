@@ -34,6 +34,10 @@ const ModalSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  isEmailConfirmed: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 ModalSchema.pre("save", function (next) {

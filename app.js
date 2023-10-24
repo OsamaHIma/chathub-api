@@ -1,17 +1,74 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const userRoutes = require("./routes/users");
 const Message = require("./models/message");
+const User = require("./models/user");
 const messagesRoutes = require("./routes/messages");
 const app = express();
 const socket = require("socket.io");
-require("dotenv").config();
 
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", userRoutes);
 app.use("/api/messages", messagesRoutes);
+// Route for the email confirmation page
+app.get("/email-confirmed", (req, res) => {
+  res.send(`
+    <html>
+      <head>
+        <title>Email Confirmed</title>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+        <style>
+          body {
+            font-family: 'Poppins', sans-serif;
+          }
+        </style>
+      </head>
+      <body class="bg-gray-100">
+        <div class="min-h-screen flex flex-col gap-4 items-center justify-center">
+        <a href="https://chathub-web.vercel.app/">
+        <img src="https://i.ibb.co/sKXw7Vz/logo.png" alt="logo" class="p-3 w-52 md:w-72 bg-gray-900 rounded-xl" />
+      </a>
+          <div class="max-w-xl !mx-3 w-full p-6 bg-indigo-500 rounded-lg shadow-lg">
+            <h1 class="text-3xl text-white font-bold mb-4">Email Confirmed</h1>
+            <p class="text-white mb-4">Your email has been confirmed. You can now log in.</p>
+            <a href="https://chathub-web.vercel.app/auth/login" target="_blank" class="inline-block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Log In</a>
+          </div>
+        </div>
+      </body>
+    </html>
+  `);
+});
+app.get("/reset-password-confirmed", (req, res) => {
+  res.send(`
+    <html>
+      <head>
+        <title>Email Confirmed</title>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+        <style>
+          body {
+            font-family: 'Poppins', sans-serif;
+          }
+        </style>
+      </head>
+      <body class="bg-gray-100">
+        <div class="min-h-screen flex flex-col gap-4 items-center justify-center">
+        <a href="https://chathub-web.vercel.app/">
+        <img src="https://i.ibb.co/sKXw7Vz/logo.png" alt="logo" class="p-3 w-52 md:w-72 bg-gray-900 rounded-xl" />
+      </a>
+          <div class="max-w-xl !mx-3 w-full p-6 bg-indigo-500 rounded-lg shadow-lg">
+            <h1 class="text-3xl text-white font-bold mb-4">Email Confirmed</h1>
+            <p class="text-white mb-4">You can now proceed to last step which is creating your new password.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `);
+});
 
 mongoose
   .connect(process.env.DB_URL, {
@@ -83,11 +140,32 @@ io.on("connection", (socket) => {
   });
   socket.on("update-user-status", (userId) => {
     const isOnline = onlineUsers.has(userId);
-    
-    socket.emit("user-status",  isOnline );
+
+    socket.emit("user-status", isOnline);
+  });
+
+  app.get("/api/auth/confirm-rest-password/:id", async (req, res, next) => {
+    try {
+      const userId = req.params.id;
+
+      // Find the user by their ID in the database
+      const user = await User.findById(userId);
+
+      if (!user) {
+        // User not found, handle the error or show appropriate message
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
+      res.redirect("/reset-password-confirmed");
+      if(user.email){
+        socket.emit("user-resetPasswordClicked", user.email);
+      }
+    } catch (error) {
+      // Handle errors
+      console.error(`Error confirming email: ${error}`);
+      next(error);
+    }
   });
 });
-
-
 
 module.exports = app;
