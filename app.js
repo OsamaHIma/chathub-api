@@ -144,7 +144,7 @@ io.on("connection", (socket) => {
     socket.emit("user-status", isOnline);
   });
 
-  app.get("/api/auth/confirm-rest-password/:id", async (req, res, next) => {
+  app.get("/api/auth/confirm-reset-password/:id", async (req, res, next) => {
     try {
       const userId = req.params.id;
 

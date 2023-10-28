@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 const { sign } = require("../utils/jwtHelper");
 const Sib = require("sib-api-v3-sdk");
 const cloudinary = require("cloudinary").v2;
+const { generateUsername } = require("friendly-username-generator");
+const generator = require("generate-password");
 
 cloudinary.config({
   cloud_name: "da9pm6mhw",
@@ -146,6 +148,39 @@ const login = async (req, res, next) => {
   }
 };
 
+const google = async (req, res, next) => {
+  const { profile } = req.body;
+
+  try {
+
+    const user = await User.findOne({ email: profile.email });
+    if (!user) {
+      const newUser = await User.create({
+        username: generateUsername(),
+        name: profile.name,
+        email: profile.email,
+        password: generator.generate({
+          length: 8,
+          numbers: true,
+        }),
+        avatar: profile.picture,
+        isEmailConfirmed: profile.email_verified,
+      });
+
+      newUser.signJwt()
+      res.status(200).json({ status: true, token: sign({ sub: newUser._id }), newUser });
+      return;
+    } else if (user) {
+      res
+        .status(200)
+        .json({ status: true, token: sign({ sub: user._id }), user });
+    }
+  } catch (error) {
+    console.error(`Error logging the user: ${error}`);
+    next(error);
+  }
+};
+
 const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
@@ -198,7 +233,7 @@ const forgotPassword = async (req, res, next) => {
 
 const resetPassword = async (req, res, next) => {
   try {
-    const {  email, password } = req.body;
+    const { email, password } = req.body;
 
     // Find the current user by their username
     const currentUser = await User.findOne({ email });
@@ -222,7 +257,7 @@ const resetPassword = async (req, res, next) => {
     });
     console.error(`Error updating the password: ${error}`);
   }
-}
+};
 
 const getAllUsers = async (req, res, next) => {
   try {
@@ -281,7 +316,51 @@ const editUser = async (req, res, next) => {
     console.error(`Error updating the user: ${error}`);
   }
 };
+// const sendEmails = async (req, res, next) => {
+//   try {
 
+//     const receivers = [
+//       {
+//         email:'subject92.23@gmail.com'
+//       },
+//     ];
+//    const info= await transEmailApi.sendTransacEmail({
+//       sender,
+//       to: receivers,
+//       subject: "Please confirm your email address",
+//       textContent: `<!DOCTYPE html>
+//       <html lang="en">
+//       <head>
+//         <meta charset="UTF-8">
+//         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+//       </head>
+//       <body style="font-family: 'Poppins', sans-serif; background-color: #1f2937;">
+//         <div style="max-width: 28rem; margin: 5rem auto; background-color: #ffffff; box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1); border-radius: 0.25rem; padding: 1.5rem;">
+//           <a href="https://chathub-web.vercel.app/" style="margin:0 auto;">
+//             <img src="https://i.ibb.co/sKXw7Vz/logo.png" alt="logo" style="padding: 0.75rem; margin-bottom: 1rem; margin-left: auto; margin-right: auto; width: 10rem; background-color: #1f2937; border-radius: 0.5rem;">
+//           </a>
+//           <h2 style="font-size: 1.5rem; text-align: center; margin-bottom: 1.5rem; color: #4F46E5; font-weight: 600;">Email Confirmation</h2>
+//           <p style="margin-bottom: 1.5rem;">Dear Subject 92,</p>
+//           <p style="margin-bottom: 1.5rem;">Thank you for signing up with our website! To complete your registration, please click the button below to confirm your email address.</p>
+//           <div style="text-align: center;">
+//             <a href="${process.env.MAIN_HOST_URL}/api/auth/confirm-email/652077be11f54198f5e9cf6f" style="background-color: #4F46E5; color: #ffffff; padding: 0.5rem 1rem; border-radius: 0.25rem; text-decoration: none; font-weight: 500; display: inline-block; box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);">Confirm Email</a>
+//           </div>
+//           <p style="margin-top: 1.5rem; color: #888888; font-size: 0.875rem;">If you did not create an account on our platform, you can safely ignore this email.</p>
+//           <p style="margin-top: 1rem;">Thank you,</p>
+//           <p style="margin-top: 0.25rem;">ChatHub Team</p>
+//         </div>
+//       </body>
+//       </html>`,
+//     });
+//     console.log(info)
+//     console.log('info')
+//   } catch (error) {
+//     console.error(`Error creating the user: ${error}`);
+//     next(error);
+//   }
+// };
+// sendEmails();
 module.exports = {
   register,
   editUser,
@@ -289,5 +368,6 @@ module.exports = {
   getAllUsers,
   confirmEmail,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  google,
 };

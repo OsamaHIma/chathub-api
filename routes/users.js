@@ -26,15 +26,19 @@ const {
   getAllUsers,
   confirmEmail,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  google
 } = require("../controllers/userController");
 var router = express.Router();
 
 router.post("/register", register);
+router.post("/login", login);
+router.post("/google", google);
+
 router.get("/confirm-email/:id", confirmEmail);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
-router.post("/login", login);
+
 router.get("/users/:id", getAllUsers);
 router.post("/edit_user", upload.single("avatar"), editUser);
 
