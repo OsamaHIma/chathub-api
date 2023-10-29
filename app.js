@@ -156,9 +156,15 @@ io.on("connection", (socket) => {
         res.status(404).json({ message: "User not found" });
         return;
       }
-      if(user.email){
-        socket.emit("user-resetPasswordClicked", user.email);
-        res.redirect("/reset-password-confirmed");
+      if (user.email) {
+        try {
+          await socket.emit("user-resetPasswordClicked", user.email);
+          return res.redirect("/reset-password-confirmed");
+        } catch (error) {
+          console.error("Error emitting 'user-resetPasswordClicked' event:", error);
+          // Handle the error appropriately (e.g., send an error response to the client)
+          return res.status(500).json({ message: "Error occurred" });
+        }
       }
     } catch (error) {
       // Handle errors
