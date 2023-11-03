@@ -17,8 +17,48 @@ const defaultClient = Sib.ApiClient.instance;
 const apiKey = defaultClient.authentications["api-key"];
 apiKey.apiKey = process.env.API_KEY;
 const transEmailApi = new Sib.TransactionalEmailsApi();
+
 const sender = {
   email: "osamahima018@gmail.com",
+};
+
+const sendEmailConfirmation = async (email, username, userid) => {
+  const receivers = [
+    {
+      email,
+    },
+  ];
+  const result = await transEmailApi.sendTransacEmail({
+    sender,
+    to: receivers,
+    subject: "Please confirm your email address",
+    textContent: `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    </head>
+    <body style="font-family: 'Poppins', sans-serif; background-color: #1f2937;">
+      <div style="max-width: 28rem; margin: 5rem auto; background-color: #ffffff; box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1); border-radius: 0.25rem; padding: 1.5rem;">
+        <a href="https://chathub-web.vercel.app/" style="margin:0 auto;">
+          <img src="https://i.ibb.co/sKXw7Vz/logo.png" alt="logo" style="padding: 0.75rem; margin-bottom: 1rem; margin-left: auto; margin-right: auto; width: 10rem; background-color: #1f2937; border-radius: 0.5rem;">
+        </a>
+        <h2 style="font-size: 1.5rem; text-align: center; margin-bottom: 1.5rem; color: #4F46E5; font-weight: 600;">Email Confirmation</h2>
+        <p style="margin-bottom: 1.5rem;">Dear ${username},</p>
+        <p style="margin-bottom: 1.5rem;">Thank you for signing up with our website! To complete your registration, please click the button below to confirm your email address.</p>
+        <div style="text-align: center;">
+          <a href="${process.env.MAIN_HOST_URL}/api/auth/confirm-email/${userid}" style="background-color: #4F46E5; color: #ffffff; padding: 0.5rem 1rem; border-radius: 0.25rem; text-decoration: none; font-weight: 500; display: inline-block; box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);">Confirm Email</a>
+        </div>
+        <p style="margin-top: 1.5rem; color: #888888; font-size: 0.875rem;">If you did not create an account on our platform, you can safely ignore this email.</p>
+        <p style="margin-top: 1rem;">Thank you,</p>
+        <p style="margin-top: 0.25rem;">ChatHub Team</p>
+      </div>
+    </body>
+    </html>`,
+  });
+  console.log(result);
+  return result;
 };
 
 const register = async (req, res, next) => {
@@ -43,40 +83,7 @@ const register = async (req, res, next) => {
       email,
       password,
     });
-    const receivers = [
-      {
-        email,
-      },
-    ];
-    await transEmailApi.sendTransacEmail({
-      sender,
-      to: receivers,
-      subject: "Please confirm your email address",
-      textContent: `<!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-      </head>
-      <body style="font-family: 'Poppins', sans-serif; background-color: #1f2937;">
-        <div style="max-width: 28rem; margin: 5rem auto; background-color: #ffffff; box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1); border-radius: 0.25rem; padding: 1.5rem;">
-          <a href="https://chathub-web.vercel.app/" style="margin:0 auto;">
-            <img src="https://i.ibb.co/sKXw7Vz/logo.png" alt="logo" style="padding: 0.75rem; margin-bottom: 1rem; margin-left: auto; margin-right: auto; width: 10rem; background-color: #1f2937; border-radius: 0.5rem;">
-          </a>
-          <h2 style="font-size: 1.5rem; text-align: center; margin-bottom: 1.5rem; color: #4F46E5; font-weight: 600;">Email Confirmation</h2>
-          <p style="margin-bottom: 1.5rem;">Dear ${name},</p>
-          <p style="margin-bottom: 1.5rem;">Thank you for signing up with our website! To complete your registration, please click the button below to confirm your email address.</p>
-          <div style="text-align: center;">
-            <a href="${process.env.MAIN_HOST_URL}/api/auth/confirm-email/${user._id}" style="background-color: #4F46E5; color: #ffffff; padding: 0.5rem 1rem; border-radius: 0.25rem; text-decoration: none; font-weight: 500; display: inline-block; box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);">Confirm Email</a>
-          </div>
-          <p style="margin-top: 1.5rem; color: #888888; font-size: 0.875rem;">If you did not create an account on our platform, you can safely ignore this email.</p>
-          <p style="margin-top: 1rem;">Thank you,</p>
-          <p style="margin-top: 0.25rem;">ChatHub Team</p>
-        </div>
-      </body>
-      </html>`,
-    });
+    sendEmailConfirmation(email, name, user._id);
 
     res.status(200).json(user.signJwt());
   } catch (error) {
@@ -99,6 +106,7 @@ const confirmEmail = async (req, res, next) => {
     }
     // Update the user's email confirmation status
     user.isEmailConfirmed = true;
+
     await user.save();
 
     // You can redirect the user to a confirmation page or send a response indicating successful confirmation
@@ -152,7 +160,6 @@ const google = async (req, res, next) => {
   const { profile } = req.body;
 
   try {
-
     const user = await User.findOne({ email: profile.email });
     if (!user) {
       const newUser = await User.create({
@@ -167,8 +174,10 @@ const google = async (req, res, next) => {
         isEmailConfirmed: profile.email_verified,
       });
 
-      newUser.signJwt()
-      res.status(200).json({ status: true, token: sign({ sub: newUser._id }), newUser });
+      newUser.signJwt();
+      res
+        .status(200)
+        .json({ status: true, token: sign({ sub: newUser._id }), newUser });
       return;
     } else if (user) {
       res
@@ -283,11 +292,8 @@ const editUser = async (req, res, next) => {
 
     // Find the current user by their username
     const currentUser = await User.findOne({ username });
-
+    let WaitingEmailConfirm = false;
     // Update the user's properties with the data from the request
-    if (email) {
-      currentUser.email = email;
-    }
     if (name) {
       currentUser.name = name;
     }
@@ -300,67 +306,79 @@ const editUser = async (req, res, next) => {
       currentUser.avatar = result.secure_url; // Assign the secure URL to the avatar field
     }
 
+    if (email) {
+      if (currentUser.email !== email) {
+        // Check if the new email already exists
+        const existingUser = await User.findOne({ email });
+        if (
+          existingUser &&
+          existingUser._id.toString() !== currentUser._id.toString()
+        ) {
+          return res.json({ message: "Email already used", status: false });
+        } else {
+          // Update the email and send confirmation email
+          const EmailConfirmationResult = async () => {
+            const receivers = [
+              {
+                email,
+              },
+            ];
+            await transEmailApi.sendTransacEmail({
+              sender,
+              to: receivers,
+              subject: "Please confirm your email address",
+              textContent: `<!DOCTYPE html>
+              <html lang="en">
+              <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+              </head>
+              <body style="font-family: 'Poppins', sans-serif; background-color: #1f2937;">
+                <div style="max-width: 28rem; margin: 5rem auto; background-color: #ffffff; box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1); border-radius: 0.25rem; padding: 1.5rem;">
+                  <a href="https://chathub-web.vercel.app/" style="margin:0 auto;">
+                    <img src="https://i.ibb.co/sKXw7Vz/logo.png" alt="logo" style="padding: 0.75rem; margin-bottom: 1rem; margin-left: auto; margin-right: auto; width: 10rem; background-color: #1f2937; border-radius: 0.5rem;">
+                  </a>
+                  <h2 style="font-size: 1.5rem; text-align: center; margin-bottom: 1.5rem; color: #4F46E5; font-weight: 600;">Email Confirmation</h2>
+                  <p style="margin-bottom: 1.5rem;">Dear ${name},</p>
+                  <p style="margin-bottom: 1.5rem;">Please click the button below to confirm your email address, in order to change it as requested.<br/>
+                  If the email didn't update immediately, try signing out and login again.
+                  </p>
+                  <div style="text-align: center;">
+                    <a href="${process.env.MAIN_HOST_URL}/api/auth/confirm-edit-email/${currentUser._id}/${email}" style="background-color: #4F46E5; color: #ffffff; padding: 0.5rem 1rem; border-radius: 0.25rem; text-decoration: none; font-weight: 500; display: inline-block; box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);">Confirm Email</a>
+                  </div>
+                  <p style="margin-top: 1.5rem; color: #888888; font-size: 0.875rem;">If you did not request this change, you can safely ignore this email.</p>
+                  <p style="margin-top: 1rem;">Thank you,</p>
+                  <p style="margin-top: 0.25rem;">ChatHub Team</p>
+                </div>
+              </body>
+              </html>`,
+            });
+          };
+          EmailConfirmationResult();
+          WaitingEmailConfirm = true;
+        }
+      }
+    }
+
     await currentUser.save();
 
     res.status(200).json({
       message: "Information updated successfully",
       status: true,
       user: currentUser,
+      isWaitingEmailConfirm: WaitingEmailConfirm,
     });
   } catch (error) {
     next(error);
+    console.error(`Error updating the user: ${error}`);
     res.status(500).json({
       message: "Error updating the info :(",
       status: false,
     });
-    console.error(`Error updating the user: ${error}`);
   }
 };
-// const sendEmails = async (req, res, next) => {
-//   try {
 
-//     const receivers = [
-//       {
-//         email:'subject92.23@gmail.com'
-//       },
-//     ];
-//    const info= await transEmailApi.sendTransacEmail({
-//       sender,
-//       to: receivers,
-//       subject: "Please confirm your email address",
-//       textContent: `<!DOCTYPE html>
-//       <html lang="en">
-//       <head>
-//         <meta charset="UTF-8">
-//         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-//         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-//       </head>
-//       <body style="font-family: 'Poppins', sans-serif; background-color: #1f2937;">
-//         <div style="max-width: 28rem; margin: 5rem auto; background-color: #ffffff; box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1); border-radius: 0.25rem; padding: 1.5rem;">
-//           <a href="https://chathub-web.vercel.app/" style="margin:0 auto;">
-//             <img src="https://i.ibb.co/sKXw7Vz/logo.png" alt="logo" style="padding: 0.75rem; margin-bottom: 1rem; margin-left: auto; margin-right: auto; width: 10rem; background-color: #1f2937; border-radius: 0.5rem;">
-//           </a>
-//           <h2 style="font-size: 1.5rem; text-align: center; margin-bottom: 1.5rem; color: #4F46E5; font-weight: 600;">Email Confirmation</h2>
-//           <p style="margin-bottom: 1.5rem;">Dear Subject 92,</p>
-//           <p style="margin-bottom: 1.5rem;">Thank you for signing up with our website! To complete your registration, please click the button below to confirm your email address.</p>
-//           <div style="text-align: center;">
-//             <a href="${process.env.MAIN_HOST_URL}/api/auth/confirm-email/652077be11f54198f5e9cf6f" style="background-color: #4F46E5; color: #ffffff; padding: 0.5rem 1rem; border-radius: 0.25rem; text-decoration: none; font-weight: 500; display: inline-block; box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);">Confirm Email</a>
-//           </div>
-//           <p style="margin-top: 1.5rem; color: #888888; font-size: 0.875rem;">If you did not create an account on our platform, you can safely ignore this email.</p>
-//           <p style="margin-top: 1rem;">Thank you,</p>
-//           <p style="margin-top: 0.25rem;">ChatHub Team</p>
-//         </div>
-//       </body>
-//       </html>`,
-//     });
-//     console.log(info)
-//     console.log('info')
-//   } catch (error) {
-//     console.error(`Error creating the user: ${error}`);
-//     next(error);
-//   }
-// };
-// sendEmails();
 module.exports = {
   register,
   editUser,

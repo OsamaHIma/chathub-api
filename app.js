@@ -161,8 +161,40 @@ io.on("connection", (socket) => {
           await socket.emit("user-resetPasswordClicked", user.email);
           return res.redirect("/reset-password-confirmed");
         } catch (error) {
-          console.error("Error emitting 'user-resetPasswordClicked' event:", error);
-          // Handle the error appropriately (e.g., send an error response to the client)
+          console.error(
+            "Error emitting 'user-resetPasswordClicked' event:",
+            error
+          );
+          return res.status(500).json({ message: "Error occurred" });
+        }
+      }
+    } catch (error) {
+      // Handle errors
+      console.error(`Error confirming email: ${error}`);
+      next(error);
+    }
+  });
+
+  app.get("/api/auth/confirm-edit-email/:id/:email", async (req, res, next) => {
+    try {
+      const userId = req.params.id;
+      const userEmail = req.params.email;
+      // Find the user by their ID in the database
+      const user = await User.findById(userId);
+
+      if (!user) {
+        // User not found, handle the error or show appropriate message
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
+      if (user) {
+        try {
+          user.email = userEmail;
+          await user.save();
+           socket.emit("user-updateUserEmail", user);
+          return res.redirect("/email-confirmed");
+        } catch (error) {
+          console.error("Error emitting 'user-updateUserEmail' event:", error);
           return res.status(500).json({ message: "Error occurred" });
         }
       }

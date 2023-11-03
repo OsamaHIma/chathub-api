@@ -35,7 +35,7 @@ router.post("/register", register);
 router.post("/login", login);
 router.post("/google", google);
 
-router.get("/confirm-email/:id", confirmEmail);
+router.get("/confirm-email/:id/", confirmEmail);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 
