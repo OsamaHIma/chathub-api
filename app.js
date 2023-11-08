@@ -158,6 +158,7 @@ io.on("connection", (socket) => {
       }
       if (user.email) {
         try {
+          await socket.emit("add-user", user._id.toString());
           await socket.emit("user-resetPasswordClicked", user.email);
           return res.redirect("/reset-password-confirmed");
         } catch (error) {
@@ -191,7 +192,7 @@ io.on("connection", (socket) => {
         try {
           user.email = userEmail;
           await user.save();
-           socket.emit("user-updateUserEmail", user);
+          socket.emit("user-updateUserEmail", user);
           return res.redirect("/email-confirmed");
         } catch (error) {
           console.error("Error emitting 'user-updateUserEmail' event:", error);
