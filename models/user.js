@@ -27,7 +27,7 @@ const ModalSchema = new mongoose.Schema({
   },
   about: {
     type: String,
-    maxLength: 120,
+    maxLength: 2000,
   },
   avatar: String,
   isAdmin: {
